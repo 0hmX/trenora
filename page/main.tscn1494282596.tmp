@@ -1,0 +1,42 @@
+[gd_scene load_steps=9 format=3 uid="uid://drqvhbi2hdpcn"]
+
+[ext_resource type="Script" uid="uid://dvpwjdfyjoprr" path="res://utils/track_manager.gd" id="1_q4lvu"]
+[ext_resource type="PackedScene" uid="uid://cbha5cdxkppsc" path="res://components/free_fly_camera/free_fly_camera.tscn" id="2_cee7s"]
+[ext_resource type="Script" uid="uid://bhsxgyssibt00" path="res://components/free_fly_camera/debug_fly_cam.gd" id="3_pmkfb"]
+[ext_resource type="PackedScene" uid="uid://cwef5mek6mpo3" path="res://components/train/train.tscn" id="7_7qu2h"]
+
+[sub_resource type="Curve3D" id="Curve3D_pmkfb"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_6t7dp"]
+
+[sub_resource type="Sky" id="Sky_7vvka"]
+sky_material = SubResource("ProceduralSkyMaterial_6t7dp")
+
+[sub_resource type="Environment" id="Environment_cee7s"]
+background_mode = 2
+sky = SubResource("Sky_7vvka")
+fog_enabled = true
+fog_depth_end = 688.9
+
+[node name="Node" type="Node"]
+
+[node name="Node3D" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 0.714216, 0.699925, 0, -0.699925, 0.714216, 0, 13.3634, 10.7103)
+
+[node name="TrackManager" type="Node3D" parent="Node3D"]
+script = ExtResource("1_q4lvu")
+train_scene = ExtResource("7_7qu2h")
+chunk_len = 40.0
+
+[node name="GeneratedPath_From_TrackPath" type="Path3D" parent="Node3D/TrackManager"]
+curve = SubResource("Curve3D_pmkfb")
+
+[node name="Node3D" type="Node3D" parent="Node3D"]
+script = ExtResource("3_pmkfb")
+
+[node name="Free fly camera" parent="Node3D/Node3D" instance=ExtResource("2_cee7s")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_cee7s")

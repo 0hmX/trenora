@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://ccktsekpgv4pq"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_0dvjm"]
+
+[node name="MeshInstance3D" type="MeshInstance3D"]
+mesh = SubResource("SphereMesh_0dvjm")
+skeleton = NodePath("../..")

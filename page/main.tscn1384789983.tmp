@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3 uid="uid://drqvhbi2hdpcn"]
+
+[ext_resource type="Script" uid="uid://dvpwjdfyjoprr" path="res://utils/TrackManager.gd" id="1_q4lvu"]
+[ext_resource type="PackedScene" uid="uid://8y0mbvrxoawo" path="res://components/train/train.tscn" id="7_7qu2h"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_6t7dp"]
+
+[sub_resource type="Sky" id="Sky_7vvka"]
+sky_material = SubResource("ProceduralSkyMaterial_6t7dp")
+
+[sub_resource type="Environment" id="Environment_cee7s"]
+background_mode = 2
+sky = SubResource("Sky_7vvka")
+fog_enabled = true
+fog_mode = 1
+fog_density = 1.0
+fog_aerial_perspective = 0.4
+fog_depth_end = 688.9
+
+[node name="Node" type="Node"]
+
+[node name="Node3D" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 0.714216, 0.699925, 0, -0.699925, 0.714216, 0, 13.3634, 10.7103)
+
+[node name="TrackManager" type="Node3D" parent="Node3D" node_paths=PackedStringArray("train")]
+script = ExtResource("1_q4lvu")
+train = NodePath("Train")
+chunk_len = 40.0
+train_speed = 2.0
+debug_mode = true
+chunk_front = 5
+chunk_end = 2
+num_points_per_chunk = 40
+
+[node name="Train" parent="Node3D/TrackManager" instance=ExtResource("7_7qu2h")]
+rotation_mode = 0
+loop = false
+tilt_enabled = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_cee7s")

@@ -1,0 +1,63 @@
+[gd_scene load_steps=7 format=3 uid="uid://diut7dbktpow8"]
+
+[ext_resource type="Shader" uid="uid://3pm1hsx07qtx" path="res://assets/shaders/water.gdshader" id="1_xgslh"]
+[ext_resource type="Texture2D" uid="uid://7l7rvywf6lsu" path="res://assets/img/ocean/normal_A.png" id="2_yxt3m"]
+[ext_resource type="Texture2D" uid="uid://bb2vkm5phesrb" path="res://assets/img/ocean/normal_B.png" id="3_lrfqr"]
+[ext_resource type="Texture2D" uid="uid://cjeoc0ntrl25t" path="res://assets/img/ocean/uv_example.png" id="4_dmci2"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pmkfb"]
+render_priority = 0
+shader = ExtResource("1_xgslh")
+shader_parameter/wave_1 = Vector4(0.3, 4, 0.2, 0.6)
+shader_parameter/wave_2 = Vector4(-0.26, -0.19, 0.01, 0.47)
+shader_parameter/wave_3 = Vector4(-7.67, 5.63, 0.1, 0.38)
+shader_parameter/wave_4 = Vector4(-0.42, -1.63, 0.1, 0.28)
+shader_parameter/wave_5 = Vector4(1.66, 0.07, 0.15, 1.81)
+shader_parameter/wave_6 = Vector4(1.2, 1.14, 0.01, 0.33)
+shader_parameter/wave_7 = Vector4(-1.6, 7.3, 0.11, 0.73)
+shader_parameter/wave_8 = Vector4(-0.42, -1.63, 0.15, 1.52)
+shader_parameter/time_factor = 2.5
+shader_parameter/noise_zoom = 2.0
+shader_parameter/noise_amp = 1.0
+shader_parameter/base_water_color = Color(0, 0, 0, 1)
+shader_parameter/fresnel_water_color = Color(0, 0, 0, 1)
+shader_parameter/deep_water_color = Color(0, 0, 0, 1)
+shader_parameter/shallow_water_color = Color(0, 0, 0, 1)
+shader_parameter/beers_law = 0.5
+shader_parameter/depth_offset = -1.2
+shader_parameter/near = 7.0
+shader_parameter/far = 10000.0
+shader_parameter/edge_texture_scale = 3.5
+shader_parameter/edge_texture_offset = 1.0
+shader_parameter/edge_texture_speed = 0.1
+shader_parameter/edge_foam_intensity = 2.0
+shader_parameter/edge_fade_start = -3.0
+shader_parameter/edge_fade_end = 6.6
+shader_parameter/peak_height_threshold = 1.0
+shader_parameter/peak_color = Vector3(1, 1, 1)
+shader_parameter/peak_intensity = 1.0
+shader_parameter/foam_intensity = 1.0
+shader_parameter/foam_scale = 1.0
+shader_parameter/metallic = 0.6
+shader_parameter/roughness = 0.045
+shader_parameter/uv_scale_text_a = 0.1
+shader_parameter/uv_speed_text_a = Vector2(0.42, 0.3)
+shader_parameter/uv_scale_text_b = 0.6
+shader_parameter/uv_speed_text_b = Vector2(0.15, 0.1)
+shader_parameter/normal_strength = 1.0
+shader_parameter/uv_sampler_scale = 0.3
+shader_parameter/blend_factor = 0.28
+shader_parameter/normalmap_a = ExtResource("2_yxt3m")
+shader_parameter/normalmap_b = ExtResource("3_lrfqr")
+shader_parameter/uv_sampler = ExtResource("4_dmci2")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_cee7s"]
+material = SubResource("ShaderMaterial_pmkfb")
+size = Vector2(100, 150)
+subdivide_width = 100
+subdivide_depth = 100
+
+[node name="Ocean" type="MeshInstance3D"]
+transform = Transform3D(-0.136318, 4.35885e-11, 0.990665, -0.000732265, 1, -0.000100762, -0.990665, -0.000739165, -0.136318, 0, 0, 0)
+mesh = SubResource("PlaneMesh_cee7s")
+skeleton = NodePath("")

@@ -1,0 +1,52 @@
+[gd_scene load_steps=9 format=3 uid="uid://b0rdidd24flic"]
+
+[ext_resource type="Script" uid="uid://dvpwjdfyjoprr" path="res://utils/track_manager.gd" id="1_mt4a3"]
+[ext_resource type="Texture2D" uid="uid://dhotohvu1wy44" path="res://assets/img/track.png" id="3_bbegb"]
+[ext_resource type="PackedScene" uid="uid://cbha5cdxkppsc" path="res://components/free_fly_camera/free_fly_camera.tscn" id="3_t4wph"]
+[ext_resource type="PackedScene" uid="uid://dl6x1ka1bh6gt" path="res://assets/mesh/sqr.tscn" id="3_wjqjd"]
+[ext_resource type="PackedScene" uid="uid://ccktsekpgv4pq" path="res://assets/mesh/debug_mesh.tscn" id="4_wjqjd"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_t4wph"]
+
+[sub_resource type="Sky" id="Sky_05qcw"]
+sky_material = SubResource("ProceduralSkyMaterial_t4wph")
+
+[sub_resource type="Environment" id="Environment_bbegb"]
+background_mode = 2
+sky = SubResource("Sky_05qcw")
+
+[node name="Test" type="Node"]
+
+[node name="TrainManger" type="Node3D" parent="."]
+script = ExtResource("1_mt4a3")
+auto_generate_on_ready = null
+initial_segments_to_generate = null
+max_active_segments = null
+chunk_length = null
+points_per_chunk = null
+track_width = null
+track_texture = ExtResource("3_bbegb")
+texture_tile_length_v = null
+initial_tangent_direction = null
+initial_up_vector = null
+spawn_train_action = null
+desired_segments_ahead_of_train = null
+unit_length = null
+unit_main_body_scene = ExtResource("3_wjqjd")
+unit_bogie_scene = ExtResource("4_wjqjd")
+unit_up_dir = null
+unit_main_mesh_offset_v = null
+train_number_of_units = 2
+train_speed = null
+train_gap = null
+train_input_forward_action = null
+train_input_backward_action = null
+train_initial_head_unit_front_offset = null
+
+[node name="Free fly camera" parent="." instance=ExtResource("3_t4wph")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.602442, 0.798163, 0, -0.798163, 0.602442, 0, 17.6835, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_bbegb")

@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://cbha5cdxkppsc"]
+
+[ext_resource type="Script" uid="uid://cdf11syugrkg3" path="res://addons/Free fly camera/Src/free_fly_startup.gd" id="1_rql7q"]
+
+[node name="Free fly camera" type="CharacterBody3D" node_paths=PackedStringArray("camera")]
+script = ExtResource("1_rql7q")
+movement_speed = 20.0
+camera = NodePath("Camera3D")
+metadata/_custom_type_script = "uid://cdf11syugrkg3"
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+current = true

@@ -1,0 +1,58 @@
+[gd_scene load_steps=12 format=3 uid="uid://d5ybf6tlubqg"]
+
+[ext_resource type="Script" uid="uid://c3m14x6hcqw6n" path="res://test/train/test_train.gd" id="1_n8pln"]
+[ext_resource type="PackedScene" uid="uid://cwef5mek6mpo3" path="res://components/train/train.tscn" id="2_x1bui"]
+[ext_resource type="PackedScene" uid="uid://ccktsekpgv4pq" path="res://assets/mesh/debug_mesh.tscn" id="3_8bgju"]
+[ext_resource type="PackedScene" uid="uid://8y0mbvrxoawo" path="res://components/train/train_unit.tscn" id="3_rymsc"]
+[ext_resource type="PackedScene" uid="uid://dl6x1ka1bh6gt" path="res://assets/mesh/sqr.tscn" id="4_83q6o"]
+[ext_resource type="PackedScene" uid="uid://cbha5cdxkppsc" path="res://components/free_fly_camera/free_fly_camera.tscn" id="6_05qcw"]
+
+[sub_resource type="Curve3D" id="Curve3D_n8pln"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -0.121828, 0, -0.0406093, 0, 0, 0, 0, 0, 0, 12.0338, 0, -0.0406093, 0, 0, 0, 0, 0, 0, 13.6549, 0, -8.84438),
+"tilts": PackedFloat32Array(0, 0, 0)
+}
+point_count = 3
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_83q6o"]
+
+[sub_resource type="Sky" id="Sky_83q6o"]
+sky_material = SubResource("ProceduralSkyMaterial_83q6o")
+
+[sub_resource type="Environment" id="Environment_nd8ph"]
+background_mode = 2
+sky = SubResource("Sky_83q6o")
+
+[sub_resource type="Curve3D" id="Curve3D_83q6o"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 13.8795, 0.391628, -9.07019, 0, 0, 0, 0, 0, 0, 1.35901, 0.0710793, -17.2459, 0, 0, 0, 0, 0, 0, -19.4056, -0.485355, -18.4005, 0, 0, 0, 0, 0, 0, -21.4397, -0.557934, -9.48012, 0, 0, 0, 0, 0, 0, -23.5081, -0.651676, 9.56111, 0, 0, 0, 0, 0, 0, -13.2682, -0.394623, 18.8057),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0)
+}
+point_count = 6
+
+[node name="TestTrain" type="Node3D"]
+script = ExtResource("1_n8pln")
+
+[node name="Path3D" type="Path3D" parent="."]
+curve = SubResource("Curve3D_n8pln")
+
+[node name="Train 11_37_19 2617331446" parent="." node_paths=PackedStringArray("initial_path", "next_path_override") instance=ExtResource("2_x1bui")]
+number_of_units = 2
+initial_path = NodePath("../Path3D")
+next_path_override = NodePath("../Path3D2")
+train_unit_scene = ExtResource("3_rymsc")
+unit_main_body_scene = ExtResource("4_83q6o")
+unit_bogie_scene = ExtResource("3_8bgju")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.558846, 0.829272, 0, -0.829272, 0.558846, 0, 11.8336, 0)
+
+[node name="Free fly camera" parent="." instance=ExtResource("6_05qcw")]
+transform = Transform3D(-0.0355972, 0, 0.999366, 0, 1, 0, -0.999366, 0, -0.0355972, 0, 1.97941, 0)
+movement_speed = 2.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_nd8ph")
+
+[node name="Path3D2" type="Path3D" parent="."]
+curve = SubResource("Curve3D_83q6o")

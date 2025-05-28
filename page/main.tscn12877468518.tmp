@@ -1,0 +1,109 @@
+[gd_scene load_steps=14 format=3 uid="uid://drqvhbi2hdpcn"]
+
+[ext_resource type="Script" uid="uid://dvpwjdfyjoprr" path="res://utils/TrackManager.gd" id="1_q4lvu"]
+[ext_resource type="Script" uid="uid://cdf11syugrkg3" path="res://addons/Free fly camera/Src/free_fly_startup.gd" id="2_cee7s"]
+[ext_resource type="Shader" uid="uid://3pm1hsx07qtx" path="res://assets/shaders/water.gdshader" id="3_jhugg"]
+[ext_resource type="Texture2D" uid="uid://7l7rvywf6lsu" path="res://assets/img/normal_A.png" id="4_ihiub"]
+[ext_resource type="Texture2D" uid="uid://bb2vkm5phesrb" path="res://assets/img/normal_B.png" id="5_7qu2h"]
+[ext_resource type="Texture2D" uid="uid://cjeoc0ntrl25t" path="res://assets/img/uv_example.png" id="6_5wg7p"]
+[ext_resource type="PackedScene" uid="uid://8y0mbvrxoawo" path="res://components/train/train.tscn" id="7_7qu2h"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pmkfb"]
+render_priority = 0
+shader = ExtResource("3_jhugg")
+shader_parameter/wave_1 = Vector4(0.3, 4, 0.2, 0.6)
+shader_parameter/wave_2 = Vector4(-0.26, -0.19, 0.01, 0.47)
+shader_parameter/wave_3 = Vector4(-7.67, 5.63, 0.1, 0.38)
+shader_parameter/wave_4 = Vector4(-0.42, -1.63, 0.1, 0.28)
+shader_parameter/wave_5 = Vector4(1.66, 0.07, 0.15, 1.81)
+shader_parameter/wave_6 = Vector4(1.2, 1.14, 0.01, 0.33)
+shader_parameter/wave_7 = Vector4(-1.6, 7.3, 0.11, 0.73)
+shader_parameter/wave_8 = Vector4(-0.42, -1.63, 0.15, 1.52)
+shader_parameter/time_factor = 2.5
+shader_parameter/noise_zoom = 2.0
+shader_parameter/noise_amp = 1.0
+shader_parameter/base_water_color = Color(0, 0, 0, 1)
+shader_parameter/fresnel_water_color = Color(0, 0, 0, 1)
+shader_parameter/deep_water_color = Color(0, 0, 0, 1)
+shader_parameter/shallow_water_color = Color(0, 0, 0, 1)
+shader_parameter/beers_law = 0.5
+shader_parameter/depth_offset = -1.2
+shader_parameter/near = 7.0
+shader_parameter/far = 10000.0
+shader_parameter/edge_texture_scale = 3.5
+shader_parameter/edge_texture_offset = 1.0
+shader_parameter/edge_texture_speed = 0.1
+shader_parameter/edge_foam_intensity = 2.0
+shader_parameter/edge_fade_start = -3.0
+shader_parameter/edge_fade_end = 6.6
+shader_parameter/peak_height_threshold = 1.0
+shader_parameter/peak_color = Vector3(1, 1, 1)
+shader_parameter/peak_intensity = 1.0
+shader_parameter/foam_intensity = 1.0
+shader_parameter/foam_scale = 1.0
+shader_parameter/metallic = 0.6
+shader_parameter/roughness = 0.045
+shader_parameter/uv_scale_text_a = 0.1
+shader_parameter/uv_speed_text_a = Vector2(0.42, 0.3)
+shader_parameter/uv_scale_text_b = 0.6
+shader_parameter/uv_speed_text_b = Vector2(0.15, 0.1)
+shader_parameter/normal_strength = 1.0
+shader_parameter/uv_sampler_scale = 0.3
+shader_parameter/blend_factor = 0.28
+shader_parameter/normalmap_a = ExtResource("4_ihiub")
+shader_parameter/normalmap_b = ExtResource("5_7qu2h")
+shader_parameter/uv_sampler = ExtResource("6_5wg7p")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_cee7s"]
+material = SubResource("ShaderMaterial_pmkfb")
+size = Vector2(100, 150)
+subdivide_width = 100
+subdivide_depth = 100
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_ihiub"]
+noise_type = 3
+frequency = 0.0001
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_6t7dp"]
+
+[sub_resource type="Sky" id="Sky_7vvka"]
+sky_material = SubResource("ProceduralSkyMaterial_6t7dp")
+
+[sub_resource type="Environment" id="Environment_cee7s"]
+background_mode = 2
+sky = SubResource("Sky_7vvka")
+fog_mode = 1
+fog_density = 1.0
+
+[node name="Node" type="Node"]
+
+[node name="Node3D" type="Node3D" parent="."]
+
+[node name="Ocean" type="MeshInstance3D" parent="Node3D"]
+transform = Transform3D(-0.136318, 4.35885e-11, 0.990665, -0.000732265, 1, -0.000100762, -0.990665, -0.000739165, -0.136318, 49.4157, -12.0633, -9.31264)
+visible = false
+mesh = SubResource("PlaneMesh_cee7s")
+skeleton = NodePath("")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 0.714216, 0.699925, 0, -0.699925, 0.714216, 0, 13.3634, 10.7103)
+
+[node name="Free fly camera" type="CharacterBody3D" parent="Node3D" node_paths=PackedStringArray("camera")]
+script = ExtResource("2_cee7s")
+movement_speed = 2.0
+camera = NodePath("Camera3D")
+metadata/_custom_type_script = "uid://cdf11syugrkg3"
+
+[node name="Camera3D" type="Camera3D" parent="Node3D/Free fly camera"]
+current = true
+
+[node name="TrackManager" type="Node3D" parent="Node3D" node_paths=PackedStringArray("train")]
+script = ExtResource("1_q4lvu")
+train = NodePath("Train")
+noise = SubResource("FastNoiseLite_ihiub")
+debug_mode = true
+
+[node name="Train" parent="Node3D/TrackManager" instance=ExtResource("7_7qu2h")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_cee7s")

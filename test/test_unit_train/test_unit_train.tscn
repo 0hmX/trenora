@@ -1,0 +1,36 @@
+[gd_scene load_steps=7 format=3 uid="uid://brrbplj8xekff"]
+
+[ext_resource type="Script" uid="uid://d2l0k813p4ykj" path="res://test/test_unit_train/test_unit_train.gd" id="1_gg43h"]
+[ext_resource type="PackedScene" uid="uid://8y0mbvrxoawo" path="res://components/train/train_unit.tscn" id="2_xnvfb"]
+[ext_resource type="PackedScene" uid="uid://ccktsekpgv4pq" path="res://assets/mesh/debug_mesh.tscn" id="3_bxk2q"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_0dvjm"]
+
+[sub_resource type="Curve3D" id="Curve3D_gg43h"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 1.94484, -0.246418, 8.97634, 0, 0, 0, 0, 0, 0, -3.07125, -2.15934, 0.888429, 0, 0, 0, 0, 0, 0, -0.2624, 0.915506, -6.42599, 0, 0, 0, 0, 0, 0, 4.95114, 4.16039, -5.44766, 0, 0, 0, 0, 0, 0, 8.03479, 5.59154, -1.98392),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0)
+}
+point_count = 5
+
+[sub_resource type="Curve3D" id="Curve3D_xnvfb"]
+
+[node name="test_unit_train" type="Node3D"]
+script = ExtResource("1_gg43h")
+
+[node name="Train_Base_Unit 10_43_47 3104887251" parent="." instance=ExtResource("2_xnvfb")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 4.9044, 0, 0)
+track_offset = 2.40381
+unit_identifier_prefix = "ll"
+
+[node name="llMainBody" parent="Train_Base_Unit 10_43_47 3104887251" instance=ExtResource("3_bxk2q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("SphereMesh_0dvjm")
+
+[node name="Path3D2" type="Path3D" parent="."]
+curve = SubResource("Curve3D_gg43h")
+
+[node name="Path3D" type="Path3D" parent="."]
+curve = SubResource("Curve3D_xnvfb")
+
+[editable path="Train_Base_Unit 10_43_47 3104887251"]
