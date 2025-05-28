@@ -21,7 +21,7 @@ extends Node3D
 @export var initial_up_vector: Vector3 = Vector3.UP
 
 @export_group("Train Spawning")
-@export var spawn_train_action:= "sprint"
+@export var spawn_train_action:= "sprint" # Assuming "sprint" is just a placeholder name
 @export var desired_segments_ahead_of_train: int = 3
 
 @export_group("Train Unit Template Properties")
@@ -43,9 +43,9 @@ extends Node3D
 var _segment_generator: TrackSegmentGenerator
 var _mesh_builder: TrackMeshBuilder
 var _track_strategy: TrackStrategy
-var _train_instance: Train
+var _train_instance: Train # Assuming Train.gd exists
 
-var _active_segments_data: Array[TrackSegmentData] = []
+var _active_segments_data: Array[TrackSegmentData] = [] # Assuming TrackSegmentData.gd exists
 var _last_generated_position_w: Vector3
 var _last_generated_tangent_w: Vector3
 var _current_up_vector_w: Vector3
@@ -94,7 +94,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				initial_path_for_train = _active_segments_data[0].path_3d_node
 			if _active_segments_data.size() > 1:
 				next_path_for_train = _active_segments_data[1].path_3d_node
-				
+
 			if is_instance_valid(initial_path_for_train):
 				_spawn_and_setup_train(initial_path_for_train, next_path_for_train)
 				get_viewport().set_input_as_handled()
@@ -132,99 +132,138 @@ func _initialize_track_system():
 
 
 func _spawn_and_setup_train(p_initial_train_path: Path3D, p_next_train_path_override: Path3D) -> void:
+	print_debug("--- TrackManager: _spawn_and_setup_train CALLED ---")
+	print_debug("    Initial Path: ", p_initial_train_path, " (Name: ", p_initial_train_path.name if is_instance_valid(p_initial_train_path) else "N/A", ")")
+	print_debug("    Next Path Override: ", p_next_train_path_override, " (Name: ", p_next_train_path_override.name if is_instance_valid(p_next_train_path_override) else "N/A", ")")
+
 	if is_instance_valid(_train_instance):
+		print_debug("    TrackManager: Freeing existing train instance.")
 		_train_instance.queue_free()
 		_train_instance = null
 
 	if not is_instance_valid(p_initial_train_path):
 		printerr("TrackManager: p_initial_train_path is not valid, cannot spawn train.")
 		return
-	
+
 	if not p_initial_train_path.is_inside_tree():
 		printerr("TrackManager: p_initial_train_path '%s' is not in the scene tree. Cannot spawn train." % p_initial_train_path.name)
 		return
 	if is_instance_valid(p_next_train_path_override) and not p_next_train_path_override.is_inside_tree():
 		printerr("TrackManager: p_next_train_path_override '%s' is not in the scene tree." % p_next_train_path_override.name)
-		# Decide if this is critical or if train can spawn without it initially.
-		# p_next_train_path_override = null # Option: nullify it if not in tree
+		# p_next_train_path_override = null # Option
 
+	print_debug("    TrackManager: Creating template Train_Unit...")
 	var template_train_unit := Train_Unit.create_train_unit(
-		p_initial_train_path, 
+		p_initial_train_path,
 		unit_length,
 		unit_main_body_scene,
 		unit_bogie_scene,
-		p_next_train_path_override, 
-		0.0, 
+		p_next_train_path_override,
+		0.0,
 		unit_up_dir,
 		unit_main_mesh_offset_v,
-		"" 
+		"TemplateFor_"
 	)
 
 	if not is_instance_valid(template_train_unit):
 		printerr("TrackManager: Failed to create template_train_unit.")
 		return
-	
+	print_debug("    TrackManager: Template Train_Unit created: ", template_train_unit.name, ", ID: ", template_train_unit.get_instance_id())
+	print_debug("        Template's target_path_3d_node: ", template_train_unit.target_path_3d_node.name if is_instance_valid(template_train_unit.target_path_3d_node) else "N/A")
+
+
+	print_debug("    TrackManager: Creating Train instance using Train.create_train...")
 	_train_instance = Train.create_train(
-		template_train_unit, 
+		template_train_unit,
 		p_initial_train_path,
-		null,
+		null, # p_initial_head_unit
 		train_number_of_units,
 		train_speed,
 		train_gap,
-		p_next_train_path_override, 
-		null, 
-		null,     
+		p_next_train_path_override,
+		null, # p_train_body_scene_override
+		null, # p_train_bogie_scene_override
 		train_input_forward_action,
 		train_input_backward_action,
 		train_initial_head_unit_front_offset
 	)
-	
+
 	if not is_instance_valid(_train_instance):
 		printerr("TrackManager: Failed to create train instance using Train.create_train.")
 		if is_instance_valid(template_train_unit) and template_train_unit.get_parent() == null:
+			print_debug("        TrackManager: Cleaning up unparented template_train_unit after Train.create_train failed.")
 			template_train_unit.queue_free()
 		return
+	print_debug("    TrackManager: Train instance created: ", _train_instance.name, ", ID: ", _train_instance.get_instance_id())
 
-	# The template unit is usually duplicated by Train.create_train. Free the original if not parented.
 	if is_instance_valid(template_train_unit) and template_train_unit.get_parent() == null:
 		var is_template_used_directly = false
-		if _train_instance.internalTrainUnitRefArray.size() > 0 and \
-		   _train_instance.internalTrainUnitRefArray[0] == template_train_unit:
+		if _train_instance.has_method("get_train_units_array_for_debug"): # Hypothetical method
+			var units_in_train = _train_instance.get_train_units_array_for_debug()
+			if units_in_train is Array and units_in_train.size() > 0 and units_in_train[0] == template_train_unit:
+				is_template_used_directly = true
+		elif _train_instance.internalTrainUnitRefArray.size() > 0 and \
+		   _train_instance.internalTrainUnitRefArray[0] == template_train_unit: # Accessing internal var if needed for debug
 			is_template_used_directly = true
+
 		if not is_template_used_directly:
+			print_debug("        TrackManager: Cleaning up unparented template_train_unit (not used directly by Train).")
 			template_train_unit.queue_free()
+		else:
+			print_debug("        TrackManager: template_train_unit appears to be used directly by Train instance, not freeing.")
 
-	add_child(_train_instance) # Add the Train node to TrackManager (which should be in the tree)
 
-	# Now that _train_instance is in the tree, its setup() can be called.
-	# setup() will add its Train_Unit children, and then their _generate_train() can work.
+	print_debug("    TrackManager: Adding Train instance as child.")
+	add_child(_train_instance)
+	print_debug("    TrackManager: Train instance is now in tree.")
+
+
 	if _train_instance.has_method("setup"):
-		_train_instance.call_deferred("setup") # Use call_deferred for setup as well
+		print_debug("    TrackManager: Calling deferred setup for Train instance.")
+		_train_instance.call_deferred("setup")
+	else:
+		print_debug("    TrackManager: Train instance does not have a 'setup' method.")
+
 
 	if not _train_instance.is_connected("all_units_on_new_path", Callable(self, "_on_train_all_units_on_new_path")):
 		var err = _train_instance.connect("all_units_on_new_path", Callable(self, "_on_train_all_units_on_new_path"))
 		if err != OK:
 			printerr("TrackManager: Failed to connect train's all_units_on_new_path signal. Error: ", err)
+		else:
+			print_debug("    TrackManager: Connected 'all_units_on_new_path' signal.")
+	print_debug("--- TrackManager: _spawn_and_setup_train FINISHED ---")
+
 
 func _physics_process(_delta: float) -> void:
 	if not _is_initialized:
 		return
 
 	if is_instance_valid(_train_instance):
-		var train_current_path: Path3D = _train_instance._current_train_path_node
-		# Fallback to checking the first unit if train's _current_train_path_node isn't set yet.
-		if not is_instance_valid(train_current_path) and _train_instance.internalTrainUnitRefArray.size() > 0:
+		var train_current_path: Path3D = null
+		if _train_instance.has_method("get_current_train_path"): # Prefer a getter
+			train_current_path = _train_instance.get_current_train_path()
+		elif is_instance_valid(_train_instance._current_train_path_node): # Fallback to direct access if no getter
+			train_current_path = _train_instance._current_train_path_node
+
+
+		if not is_instance_valid(train_current_path) and _train_instance.has_method("get_train_units_array_for_debug"): # Hypothetical method
+			var units_in_train = _train_instance.get_train_units_array_for_debug()
+			if units_in_train is Array and units_in_train.size() > 0:
+				var lead_unit = units_in_train[0]
+				if is_instance_valid(lead_unit):
+					train_current_path = lead_unit.get_current_path()
+		elif not is_instance_valid(train_current_path) and _train_instance.internalTrainUnitRefArray.size() > 0: # Fallback
 			var lead_unit = _train_instance.internalTrainUnitRefArray[0]
 			if is_instance_valid(lead_unit):
 				train_current_path = lead_unit.get_current_path()
-		
+
 		if is_instance_valid(train_current_path):
 			var train_segment_idx = -1
 			for i in range(_active_segments_data.size()):
 				if _active_segments_data[i].path_3d_node == train_current_path:
 					train_segment_idx = i
 					break
-			
+
 			if train_segment_idx != -1:
 				var segments_ahead_of_train = _active_segments_data.size() - 1 - train_segment_idx
 				var effective_desired_segments_ahead = max(1, desired_segments_ahead_of_train)
@@ -247,24 +286,32 @@ func _on_train_all_units_on_new_path(new_path_node_for_train: Path3D, p_train_no
 		if is_instance_valid(segment_data) and segment_data.path_3d_node == new_path_node_for_train:
 			current_segment_index = i
 			break
-	
+
 	if current_segment_index == -1:
 		printerr("TrackManager: Could not find segment data for path train moved to: ", new_path_node_for_train.name)
-		if is_instance_valid(_train_instance): _train_instance.next_path_override = null
+		if is_instance_valid(_train_instance) and _train_instance.has_method("set_next_path_override_setter_method"): # Prefer setter
+			_train_instance.set_next_path_override_setter_method(null)
+		elif is_instance_valid(_train_instance): # Fallback
+			_train_instance.next_path_override = null
 		return
 
 	var next_segment_index = current_segment_index + 1
+	var new_next_path_for_train: Path3D = null
 	if next_segment_index < _active_segments_data.size():
 		var next_segment_data: TrackSegmentData = _active_segments_data[next_segment_index]
 		if is_instance_valid(next_segment_data) and is_instance_valid(next_segment_data.path_3d_node):
-			_train_instance.next_path_override = next_segment_data.path_3d_node
-	else:
-		_train_instance.next_path_override = null # No more segments known ahead
+			new_next_path_for_train = next_segment_data.path_3d_node
+
+	if is_instance_valid(_train_instance) and _train_instance.has_method("set_next_path_override_setter_method"): # Prefer setter
+		_train_instance.set_next_path_override_setter_method(new_next_path_for_train)
+	elif is_instance_valid(_train_instance): # Fallback
+		_train_instance.next_path_override = new_next_path_for_train
+
 
 	var num_to_prune_due_to_limit = _active_segments_data.size() - max_active_segments
 	var actual_pruned_count = 0
-	if num_to_prune_due_to_limit > 0: # Prune if over max_active_segments, starting from the oldest
-		for _i in range(min(num_to_prune_due_to_limit, current_segment_index)): 
+	if num_to_prune_due_to_limit > 0:
+		for _i in range(min(num_to_prune_due_to_limit, current_segment_index)):
 			if _active_segments_data.is_empty(): break
 			var segment_to_remove: TrackSegmentData = _active_segments_data.pop_front()
 			if is_instance_valid(segment_to_remove):
@@ -272,8 +319,8 @@ func _on_train_all_units_on_new_path(new_path_node_for_train: Path3D, p_train_no
 				if is_instance_valid(segment_to_remove.path_3d_node):
 					segment_to_remove.path_3d_node.queue_free()
 				actual_pruned_count += 1
-	else: # Prune segments behind the train if not limited by max_active_segments yet
-		var max_segments_to_keep_behind = 0 # Or 1, if you want to keep the immediate previous segment
+	else:
+		var max_segments_to_keep_behind = 0
 		var segments_to_prune_behind = current_segment_index - max_segments_to_keep_behind
 		if segments_to_prune_behind > 0:
 			for _i in range(segments_to_prune_behind):
@@ -286,7 +333,6 @@ func _on_train_all_units_on_new_path(new_path_node_for_train: Path3D, p_train_no
 					actual_pruned_count += 1
 
 	if actual_pruned_count > 0:
-		# Re-evaluate current_segment_index if pruning happened before it
 		var found_again = false
 		for i_new in range(_active_segments_data.size()):
 			if is_instance_valid(_active_segments_data[i_new]) and _active_segments_data[i_new].path_3d_node == new_path_node_for_train:
@@ -295,7 +341,6 @@ func _on_train_all_units_on_new_path(new_path_node_for_train: Path3D, p_train_no
 				break
 		if not found_again:
 			printerr("TrackManager: CRITICAL - Could not re-locate train's current path after pruning.")
-			# This state is problematic, might need to reset train or re-evaluate paths.
 			return
 
 	var segments_ahead_of_train = _active_segments_data.size() - 1 - current_segment_index
@@ -303,7 +348,7 @@ func _on_train_all_units_on_new_path(new_path_node_for_train: Path3D, p_train_no
 	var num_to_generate_proactively = 0
 	if segments_ahead_of_train < effective_desired_segments_ahead:
 		num_to_generate_proactively = effective_desired_segments_ahead - segments_ahead_of_train
-	
+
 	num_to_generate_proactively = min(num_to_generate_proactively, max_active_segments - _active_segments_data.size())
 
 	if num_to_generate_proactively > 0:
@@ -316,17 +361,17 @@ func _on_train_all_units_on_new_path(new_path_node_for_train: Path3D, p_train_no
 func _generate_next_segment_sequence() -> bool:
 	if _active_segments_data.size() >= max_active_segments:
 		return false
-	
+
 	if not is_instance_valid(_track_strategy):
 		printerr("TrackManager: _track_strategy is not valid!")
 		return false
 	var master_type_key = _track_strategy.get_next_segment_type(_active_segments_data)
 	var master_config = _track_strategy.get_base_config_for_type(master_type_key)
-	
+
 	if master_config == null:
 		printerr("TrackManager: No configuration found for master type '%s'." % master_type_key)
 		return false
-		
+
 	var segments_in_sequence: Array[Dictionary] = []
 	if master_config.has("sequence"):
 		var raw_sequence = master_config.get("sequence")
@@ -336,10 +381,10 @@ func _generate_next_segment_sequence() -> bool:
 					segments_in_sequence.append(item)
 				else:
 					printerr("TrackManager: Item in master_config.sequence is not a Dictionary. Skipping. Item: ", item)
-	
+
 	if segments_in_sequence.is_empty():
 		segments_in_sequence.append({"type": master_type_key, "params": master_config.get("params", {})})
-		
+
 	var overall_success_for_sequence = true
 	for sub_segment_config in segments_in_sequence:
 		if _active_segments_data.size() >= max_active_segments:
@@ -348,14 +393,14 @@ func _generate_next_segment_sequence() -> bool:
 		var specific_type_key = sub_segment_config.get("type", "straight")
 		var params_override = sub_segment_config.get("params", {})
 		var base_type_config = _track_strategy.get_base_config_for_type(specific_type_key)
-		
+
 		if base_type_config == null:
 			printerr("TrackManager: No base configuration found for sub-segment type '%s'." % specific_type_key)
 			overall_success_for_sequence = false; break
 
 		var current_segment_length = sub_segment_config.get("length_override", chunk_length)
 		var num_points = sub_segment_config.get("num_points_override", points_per_chunk)
-		
+
 		if not is_instance_valid(_segment_generator):
 			printerr("TrackManager: _segment_generator is not valid!")
 			return false
@@ -364,44 +409,46 @@ func _generate_next_segment_sequence() -> bool:
 			specific_type_key, params_override, base_type_config, num_points,
 			current_segment_length, _last_generated_position_w,
 			_last_generated_tangent_w, _current_up_vector_w)
-			
+
 		if not is_instance_valid(segment_data_obj) or segment_data_obj.points_w.size() < 2:
 			printerr("TrackManager: Failed to generate segment data for type '%s'." % specific_type_key)
 			overall_success_for_sequence = false
 			break
-			
+
 		var path_node = Path3D.new()
 		path_node.name = "TrackSegmentPath_" + str(_next_segment_unique_id)
-		add_child(path_node)
-		path_node.global_transform = Transform3D.IDENTITY
-		
+		add_child(path_node) # Path node is added to TrackManager
+		path_node.global_transform = Transform3D.IDENTITY # Ensure it's at origin relative to TrackManager
+
 		segment_data_obj.path_3d_node = path_node
 		segment_data_obj.id = _next_segment_unique_id
 		_next_segment_unique_id += 1
-		
+
 		if not is_instance_valid(path_node.curve):
 			path_node.curve = Curve3D.new()
-			
+
 		for p_w in segment_data_obj.points_w:
-			path_node.curve.add_point(p_w)
-			
+			# Points are already world, convert to local for Path3D child of TrackManager
+			path_node.curve.add_point(path_node.to_local(p_w))
+
+
 		if not is_instance_valid(_mesh_builder):
 			printerr("TrackManager: _mesh_builder is not valid!")
 			overall_success_for_sequence = false; break
 
-		var mesh_instance = _mesh_builder.build_mesh_for_segment(segment_data_obj, path_node.global_transform,
+		var mesh_instance = _mesh_builder.build_mesh_for_segment(segment_data_obj, path_node.global_transform, # Path node's global transform
 			_current_up_vector_w, track_width, track_material, track_texture, texture_tile_length_v)
-			
+
 		if is_instance_valid(mesh_instance):
 			segment_data_obj.mesh_instance = mesh_instance
-			path_node.add_child(mesh_instance)
+			path_node.add_child(mesh_instance) # Mesh is child of Path3D, so its local transforms are fine
 		else:
 			printerr("TrackManager: Failed to build mesh for segment %s." % path_node.name)
-			
+
 		_active_segments_data.append(segment_data_obj)
 		_last_generated_position_w = segment_data_obj.points_w[-1]
 		_last_generated_tangent_w = segment_data_obj.end_tangent_w.normalized()
-		
+
 		var new_right_w = _last_generated_tangent_w.cross(_current_up_vector_w).normalized()
 		if new_right_w.is_zero_approx():
 			var temp_reference_vec = Vector3.RIGHT if abs(_last_generated_tangent_w.dot(Vector3.UP)) < 0.999 else Vector3.FORWARD
@@ -420,7 +467,7 @@ func _generate_next_segment_sequence() -> bool:
 		if _current_up_vector_w.is_zero_approx() or not _current_up_vector_w.is_finite():
 			printerr("TrackManager: Degenerate up vector. Resetting to Vector3.UP.")
 			_current_up_vector_w = Vector3.UP
-		
+
 	return overall_success_for_sequence
 
 func _clear_all_segments_and_train():

@@ -4,7 +4,7 @@ extends Node3D
 @export var target_path_3d_node: Path3D
 @export var next_route_path_3d_node: Path3D
 
-var generate_node: Callable = _generate_train # Still useful for programmatic regeneration if needed
+var generate_node: Callable = _generate_train
 
 @export var main_body_scene: PackedScene
 @export var bogie_scene: PackedScene
@@ -40,7 +40,7 @@ var _front_bogie_progress: float = 0.0
 var _pending_jump_signal_emission: bool = false
 var _last_path_jumped_from: Path3D = null
 
-var _initial_generation_done := false # To ensure _generate_train is called only once initially
+var _initial_generation_done := false
 
 static func create_train_unit(
 	p_target_path: Path3D,
@@ -53,7 +53,7 @@ static func create_train_unit(
 	p_main_mesh_offset_v: float = 1.0,
 	p_unit_identifier_prefix: String = ""
 ) -> Train_Unit:
-	# print_debug("create_train_unit called") # For debugging
+	print_debug("create_train_unit called")
 	var new_train_unit := Train_Unit.new()
 
 	new_train_unit.target_path_3d_node = p_target_path
@@ -127,7 +127,6 @@ func _instantiate_scene_or_placeholder(p_scene: PackedScene, p_fallback: Callabl
 	return n3d
 
 func _create_bogie_assembly(p_path: Path3D, p_name: StringName, p_progress: float) -> PathFollow3D:
-	print_debug("_create_bogie_assembly for: ", name, " on path: ", p_path.name if is_instance_valid(p_path) else "INVALID PATH") # For debugging
 	if not is_instance_valid(p_path): return null
 	if not p_path.is_inside_tree():
 		printerr("Train_Unit (%s): Path3D '%s' is not inside the scene tree. Cannot add PathFollow3D." % [name, p_path.name])
@@ -138,7 +137,6 @@ func _create_bogie_assembly(p_path: Path3D, p_name: StringName, p_progress: floa
 
 	fol.add_child(m_n)
 	p_path.add_child(fol)
-	# No owner setting needed for runtime only
 	return fol
 
 func _get_path_length(p_path: Path3D) -> float:
@@ -148,9 +146,9 @@ func _get_path_length(p_path: Path3D) -> float:
 	return path_len
 
 func _generate_train() -> void:
-	# print_debug("_generate_train called for: ", name) # For debugging
+	print_debug("--- TrainUnit (", name, "): _generate_train CALLED ---") # New, more prominent marker
+	print_stack() # <<< THIS IS THE MOST IMPORTANT LINE TO ADD NOW
 	if not is_inside_tree():
-		# print_debug("Train_Unit (%s): _generate_train called before being added to tree. Deferring." % name)
 		return
 
 	_update_generated_names()
@@ -171,7 +169,7 @@ func _generate_train() -> void:
 	if not _rear_bogie_path.is_inside_tree():
 		printerr("Train_Unit (%s): _rear_bogie_path '%s' is not in the scene tree. Cannot generate bogies." % [name, _rear_bogie_path.name])
 		return
-	if _rear_bogie_path != _front_bogie_path and not _front_bogie_path.is_inside_tree(): # Check _front_bogie_path only if different
+	if _rear_bogie_path != _front_bogie_path and not _front_bogie_path.is_inside_tree():
 		printerr("Train_Unit (%s): _front_bogie_path '%s' is not in the scene tree. Cannot generate bogies." % [name, _front_bogie_path.name])
 		return
 
@@ -311,7 +309,6 @@ func _create_body_node_if_missing() -> void:
 		b_node.name = _generated_main_body_name
 		b_node.position = up_dir.normalized() * main_mesh_offset_v
 		add_child(b_node)
-		# No owner setting needed for runtime only
 
 func _update_body_transform() -> void:
 	if not is_instance_valid(_rear_bogie_follower_node) or not is_instance_valid(_front_bogie_follower_node): return
@@ -350,7 +347,7 @@ func _update_body_transform() -> void:
 				fwd_v = (p2_world_pos - p1_world_pos)
 
 		if fwd_v.length_squared()<1e-6:
-			fwd_v = global_transform.basis.z # Assumes node is in tree
+			fwd_v = global_transform.basis.z
 		if fwd_v.length_squared()<1e-6: fwd_v=Vector3.FORWARD
 
 	fwd_v=fwd_v.normalized()
@@ -369,7 +366,7 @@ func _update_body_transform() -> void:
 		else:
 			fin_up = Vector3.UP if not fwd_v.is_equal_approx(Vector3.UP) and not fwd_v.is_equal_approx(Vector3.DOWN) else Vector3.FORWARD
 
-	global_transform.basis=Basis.looking_at(-fwd_v, fin_up) # Assumes node is in tree
+	global_transform.basis=Basis.looking_at(-fwd_v, fin_up)
 
 func _check_and_emit_jump_signal() -> void:
 	if not is_inside_tree(): return
@@ -406,65 +403,29 @@ func get_front_bogie_path() -> Path3D:
 func get_front_bogie_progress() -> float:
 	return _front_bogie_progress
 
-func get_front_offset_on_current_path() -> float: # This seems redundant with get_front_bogie_progress
+func get_front_offset_on_current_path() -> float:
 	return _front_bogie_progress
 
-func _enter_tree() -> void:
-	# print_debug("_enter_tree called for: ", name) # For debugging
-	# Attempt initial generation if paths are ready
-	# Otherwise, _on_target_path_entered_tree will handle it if target_path_3d_node is set later
-	# or if it enters the tree after this node.
-	if is_instance_valid(target_path_3d_node) and target_path_3d_node.is_inside_tree():
-		call_deferred("_attempt_initial_generate")
-	elif is_instance_valid(target_path_3d_node):
-		# If target path exists but isn't in tree yet, wait for it.
-		if not target_path_3d_node.is_connected("tree_entered", Callable(self, "_on_target_path_entered_tree_for_initial_generate")):
-			target_path_3d_node.connect("tree_entered", Callable(self, "_on_target_path_entered_tree_for_initial_generate"), CONNECT_ONE_SHOT)
-	# else: target_path_3d_node is not set yet, _attempt_initial_generate will do nothing until it is.
-
-
-func _ready() -> void:
-	print_debug("_ready called for: ", name) # For debugging
-	# Initialize internal path variables from exported ones if not already done by create_train_unit
-	# This is mostly a fallback if the unit was placed in scene and not created via create_train_unit
-	if not is_instance_valid(_rear_bogie_path) and is_instance_valid(target_path_3d_node):
-		_rear_bogie_path = target_path_3d_node
-	_rear_bogie_progress = track_offset # Sync with current track_offset
-
-	if not is_instance_valid(_front_bogie_path) and is_instance_valid(target_path_3d_node):
-		_front_bogie_path = target_path_3d_node
-	_front_bogie_progress = _rear_bogie_progress + length
-
-	_update_generated_names()
-	# Initial generation is now primarily handled by _enter_tree or set_target_path_3d_node
-	# This _ready might run before target_path_3d_node is in tree if both are added concurrently.
-	# _attempt_initial_generate via call_deferred from _enter_tree is more robust.
-
-
 func _on_target_path_entered_tree_for_initial_generate():
-	# print_debug("_on_target_path_entered_tree_for_initial_generate called for: ", name) # For debugging
+	print_debug("_on_target_path_entered_tree_for_initial_generate called for: ", name)
 	call_deferred("_attempt_initial_generate")
 
+var _attempt_initial_generate_call_count := 0 # Add this member variable
+
 func _attempt_initial_generate():
+	_attempt_initial_generate_call_count += 1
+	print_debug(">>> _attempt_initial_generate CALLED for: ", name, " (Call #", _attempt_initial_generate_call_count, ")")
+	print_debug("    Current _initial_generation_done state: ", _initial_generation_done)
+
 	if not _initial_generation_done:
+		print_debug("    Condition (not _initial_generation_done) is TRUE for ", name)
 		if is_inside_tree() and is_instance_valid(target_path_3d_node) and target_path_3d_node.is_inside_tree():
-			# print_debug("Attempting initial generation for: ", name) # For debugging
-			_generate_train()
+			print_debug("    Attempting actual initial generation for: ", name)
+			_generate_train() # This is where your log "_generate_train called for: ..." comes from
+			print_debug("    Setting _initial_generation_done = true for ", name)
 			_initial_generation_done = true
-		# else:
-			# print_debug("Conditions not met for initial generation of: ", name) # For debugging
-
-func set_target_path_3d_node(new_path: Path3D):
-	if target_path_3d_node == new_path:
-		return
-	target_path_3d_node = new_path
-	_rear_bogie_path = target_path_3d_node
-	_front_bogie_path = target_path_3d_node
-	_initial_generation_done = false # Allow regeneration if path changes
-
-	if is_inside_tree(): # Only attempt to generate if this unit is in the tree
-		if is_instance_valid(target_path_3d_node) and target_path_3d_node.is_inside_tree():
-			call_deferred("_attempt_initial_generate") # Or just _generate_train if always immediate
-		elif is_instance_valid(target_path_3d_node):
-			if not target_path_3d_node.is_connected("tree_entered", Callable(self, "_on_target_path_entered_tree_for_initial_generate")):
-				target_path_3d_node.connect("tree_entered", Callable(self, "_on_target_path_entered_tree_for_initial_generate"), CONNECT_ONE_SHOT)
+		else:
+			print_debug("    Conditions (in_tree/path_valid/path_in_tree) NOT MET for actual generation for ", name)
+	else:
+		print_debug("    Condition (not _initial_generation_done) is FALSE for ", name, ". Skipping generation.")
+	print_debug("<<< _attempt_initial_generate FINISHED for: ", name)

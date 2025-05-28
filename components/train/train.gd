@@ -1,7 +1,7 @@
 class_name Train
 extends Node3D
 
-@export var number_of_units := 4
+@export var number_of_units := 1
 
 @export var speed := 5.0
 @export var gap := 2.0
@@ -62,13 +62,7 @@ static func create_train(
 	new_train.input_forward_action = p_input_forward_action
 	new_train.input_backward_action = p_input_backward_action
 	new_train.head_unit_front_offset = p_initial_head_unit_front_offset
-			
-	# IMPORTANT: setup() will add units to the tree.
-	# _generate_train() on units should be called AFTER they are in the tree.
-	# The Train's setup method should handle this.
-	# new_train.setup() # Call setup AFTER new_train is added to the main scene tree by the caller.
 	return new_train
-
 
 func setup() -> void:
 	_clear_existing_units()
@@ -152,10 +146,10 @@ func setup() -> void:
 			else:
 				printerr("Train setup (%s): next_path_override '%s' for unit 0 is not in the scene tree." % [name, next_path_override.name])
 		
-		if not is_instance_valid(unit_node_instance.main_body_scene) and is_instance_valid(self.unit_main_body_scene):
-			unit_node_instance.main_body_scene = self.unit_main_body_scene
-		if not is_instance_valid(unit_node_instance.bogie_scene) and is_instance_valid(self.unit_bogie_scene):
-			unit_node_instance.bogie_scene = self.unit_bogie_scene
+		#if not is_instance_valid(unit_node_instance.main_body_scene) and is_instance_valid(self.unit_main_body_scene):
+			#unit_node_instance.main_body_scene = self.unit_main_body_scene
+		#if not is_instance_valid(unit_node_instance.bogie_scene) and is_instance_valid(self.unit_bogie_scene):
+			#unit_node_instance.bogie_scene = self.unit_bogie_scene
 		
 		var unit_len = unit_node_instance.length
 		unit_node_instance.track_offset = current_placement_front_offset - unit_len
@@ -181,7 +175,6 @@ func setup() -> void:
 				unit_node_instance.call_deferred("_generate_train") # Use call_deferred
 		elif is_instance_valid(unit_node_instance.target_path_3d_node):
 			printerr("Train setup (%s): target_path_3d_node for unit %s is not in tree. Generation deferred." % [name, i])
-			# Train_Unit._enter_tree will attempt to call _generate_train.
 		else:
 			printerr("Train setup (%s): target_path_3d_node for unit %s is invalid." % [name, i])
 		
@@ -196,42 +189,6 @@ func _on_initial_path_entered_tree_for_setup():
 	if is_inside_tree() and is_instance_valid(initial_path) and initial_path.is_inside_tree():
 		call_deferred("setup") # Retry setup
 
-
-func _ready() -> void:
-	if not Engine.is_editor_hint():
-		# If Train is added to scene, and initial_path is already in scene, setup will run.
-		# If initial_path is not in scene, setup will connect to its tree_entered.
-		if is_inside_tree(): # Ensure the Train itself is in the tree before calling setup
-			call_deferred("setup") # Defer to ensure all nodes are ready
-		else:
-			# This case is less common if Train is instantiated and then added.
-			# If Train is part of a scene being instanced, _enter_tree is better.
-			pass
-
-# In your Train.gd script
-
-# ... (other parts of Train.gd) ...
-
-func _enter_tree() -> void:
-	if not Engine.is_editor_hint():
-		# This check is to avoid running setup automatically when the scene containing this Train
-		# is just being opened or manipulated in the editor, but not when it's part of the
-		# 'edited_scene_root' directly (which is what @tool scripts often operate on).
-		# A more robust check for "is this node being actively edited vs. running in game"
-		# can be complex. For runtime, Engine.is_editor_hint() is the main guard.
-		# If the Train node's owner is the edited scene root, it might be part of a @tool setup.
-		# However, for runtime instantiation, owner might be null or the instantiating scene.
-		var is_part_of_edited_scene = false
-		if get_tree() and get_tree().edited_scene_root:
-			if owner == get_tree().edited_scene_root:
-				is_part_of_edited_scene = true # This node is directly part of the scene being edited
-			# You could also check if this node is a descendant of the edited_scene_root,
-			# but that might be overly broad if you only want to exclude the top-level edited scene.
-
-		if not is_part_of_edited_scene: # Only run setup if not directly part of the actively edited scene
-			call_deferred("setup")
-	# If Engine.is_editor_hint() is true, the @tool button is the explicit way to call setup.
-	# _ready() also handles some editor scenarios for initial placement.
 func _clear_existing_units() -> void:
 	for unit_node in internalTrainUnitRefArray:
 		if is_instance_valid(unit_node):

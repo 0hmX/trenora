@@ -1,10 +1,8 @@
-[gd_scene load_steps=9 format=3 uid="uid://b0rdidd24flic"]
+[gd_scene load_steps=7 format=3 uid="uid://b0rdidd24flic"]
 
 [ext_resource type="Script" uid="uid://dvpwjdfyjoprr" path="res://utils/track_manager.gd" id="1_mt4a3"]
 [ext_resource type="Texture2D" uid="uid://dhotohvu1wy44" path="res://assets/img/track.png" id="3_bbegb"]
 [ext_resource type="PackedScene" uid="uid://cbha5cdxkppsc" path="res://components/free_fly_camera/free_fly_camera.tscn" id="3_t4wph"]
-[ext_resource type="PackedScene" uid="uid://dl6x1ka1bh6gt" path="res://assets/mesh/sqr.tscn" id="3_wjqjd"]
-[ext_resource type="PackedScene" uid="uid://ccktsekpgv4pq" path="res://assets/mesh/debug_mesh.tscn" id="4_wjqjd"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_t4wph"]
 
@@ -20,9 +18,7 @@ sky = SubResource("Sky_05qcw")
 [node name="TrainManger" type="Node3D" parent="."]
 script = ExtResource("1_mt4a3")
 track_texture = ExtResource("3_bbegb")
-unit_main_body_scene = ExtResource("3_wjqjd")
-unit_bogie_scene = ExtResource("4_wjqjd")
-train_number_of_units = 2
+train_number_of_units = 3
 
 [node name="Free fly camera" parent="." instance=ExtResource("3_t4wph")]
 
