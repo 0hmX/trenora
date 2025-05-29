@@ -18,7 +18,7 @@ sky = SubResource("Sky_05qcw")
 [node name="TrainManger" type="Node3D" parent="."]
 script = ExtResource("1_mt4a3")
 track_texture = ExtResource("3_bbegb")
-train_number_of_units = 3
+train_number_of_units = 1
 
 [node name="Free fly camera" parent="." instance=ExtResource("3_t4wph")]
 

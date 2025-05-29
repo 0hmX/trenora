@@ -1,24 +1,19 @@
-"""
-instruction For AI
-- this is Godot 4.4
-- all internal variable mus start with '_internal' keyword
-- all public var must not have '_' or  '_internal' at the begnning
-- avioid comments
-- keep this instruction always at the top
-- all public var should use 
-
-setget
-exmpale in Godot 4
-var health: float = 100.0:
-	set = _set_health,
-	get = _get_health
-
-func _set_health(new_value: float) -> void:
-	health = new_value
-
-func _get_health() -> float:
-	return health
-"""
+# instruction For AI
+# - this is Godot 4.4
+# - all internal variable mus start with '_internal' keyword
+# - all public var must not have '_' or  '_internal' at the begnning
+# - avioid comments
+# - keep this instruction always at the top
+# - all public var should use
+# setget
+# exmpale in Godot 4
+# var health: float = 100.0:
+# 	set = _set_health,
+# 	get = _get_health
+# func _set_health(new_value: float) -> void:
+# 	health = new_value
+# func _get_health() -> float:
+# 	return health
 
 class_name Train
 extends Node3D
@@ -331,6 +326,7 @@ func _on_train_unit_jumped_path(new_path_node_for_unit: Path3D, unit_that_jumped
 			all_on_new_path = false
 			break
 	if all_on_new_path:
+		printerr("all_units_on_new_path ", name)
 		emit_signal("all_units_on_new_path", new_path_node_for_unit, self)
 
 func _on_train_unit_reached_end(unit_node: Train_Unit) -> void:
@@ -338,6 +334,7 @@ func _on_train_unit_reached_end(unit_node: Train_Unit) -> void:
 	if unit_index == -1: return
 
 	if unit_index == _internal_train_unit_ref_array.size() - 1:
+		printerr("all_units_on_new_path ", name)
 		emit_signal("train_reached_end_of_route", self)
 
 func _handle_train_movement(delta: float) -> void:

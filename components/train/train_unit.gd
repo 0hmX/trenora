@@ -1,24 +1,19 @@
-"""
-instruction For AI
-- this is Godot 4.4
-- all internal variable mus start with '_internal' keyword
-- all public var must not have '_' or  '_internal' at the begnning
-- avioid comments
-- keep this instruction always at the top
-- all public var should use 
-
-setget
-exmpale in Godot 4
-var health: float = 100.0:
-	set = _set_health,
-	get = _get_health
-
-func _set_health(new_value: float) -> void:
-	health = new_value
-
-func _get_health() -> float:
-	return health
-"""
+# instruction For AI
+# - this is Godot 4.4
+# - all internal variable mus start with '_internal' keyword
+# - all public var must not have '_' or  '_internal' at the begnning
+# - avioid comments
+# - keep this instruction always at the top
+# - all public var should use
+# setget
+# exmpale in Godot 4
+# var health: float = 100.0:
+# 	set = _set_health,
+# 	get = _get_health
+# func _set_health(new_value: float) -> void:
+# 	health = new_value
+# func _get_health() -> float:
+# 	return health
 
 class_name Train_Unit
 extends Node3D
@@ -335,7 +330,7 @@ func _get_path_length(p_path: Path3D) -> float:
 	return path_len
 
 func _generate_train() -> void:
-	print_debug("--- TrainUnit (", name, "): _generate_train CALLED ---")
+	#print_debug("--- TrainUnit (", name, "): _generate_train CALLED ---")
 	if not is_inside_tree():
 		return
 
@@ -400,6 +395,7 @@ func _generate_train() -> void:
 						_internal_front_bogie_progress >= current_rear_path_len - 1e-5
 					)
 					if not front_also_at_this_exact_end and is_inside_tree():
+						printerr("reached_end_of_final_path", name)
 						emit_signal("reached_end_of_final_path", self)
 				break
 		else: break
@@ -446,6 +442,7 @@ func _generate_train() -> void:
 						_internal_rear_bogie_progress >= current_front_path_len - length - 1e-5
 					)
 					if not rear_also_at_this_effective_end and is_inside_tree():
+						printerr("reached_end_of_final_path", name)
 						emit_signal("reached_end_of_final_path", self)
 				break
 		else: break
@@ -573,8 +570,12 @@ func _check_and_emit_jump_signal() -> void:
 		_internal_last_path_jumped_from = null
 
 func move_forward_on_path(distance_to_move: float) -> void:
-	if not is_inside_tree(): return
-	if distance_to_move <= 0.0: return
+	if not is_inside_tree():
+		printerr("not inside tree")
+		return
+	if distance_to_move <= 0.0:
+		printerr("too small")
+		return
 	self.track_offset += distance_to_move # This will call _set_track_offset
 	# _generate_train will be called by _set_track_offset if conditions are met
 
